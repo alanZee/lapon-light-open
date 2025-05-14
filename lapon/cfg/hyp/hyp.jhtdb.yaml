@@ -1,0 +1,18 @@
+# LaPON, GPL-3.0 license
+
+# Data hyp (for trainer & validator etc.) ----------------------------------------------------------------------------------------------------------
+dt_multiple: [8, 16] # (Don't oversize the scope !) the dt multiple rang from current frame to history / label frame (Interpolate to takes frames if dt_multiple[i]<1) 
+    # (Demand: dt_multiple[i]<1 or Integer, dt_multiple[0]<=dt_multiple[1]; preferably be in [0.1, 0.2, 0.5] if dt_multiple[i]<1 when validate) 
+    # kolmogorov time 0.0424 = 21.2*2e-3 (JHTDB) ; large eddy turnover time 1.99 = 995*2e-3 (JHTDB) ; 流体混沌震荡 Lyapunov time 2 = 1000*2e-3 (https://zh.wikipedia.org/wiki/%E6%9D%8E%E9%9B%85%E6%99%AE%E8%AF%BA%E5%A4%AB%E6%97%B6%E9%97%B4) 
+crop_ratio: [-1, -1] # (Don't oversize the scope !) crop sub-solution domain on origin frame (fraction range, final_crop_shape = fraction * preset_shape_in_DatasetClass), [-1, -1] means no crop domain
+multi_scale: [0.5, 1.20] # multi-scale for every batch (not every sample; work in trainer engine), final resize ratio (gain range), [1.0, 1.0] means no multi-scale train
+flipud: 0.5  # frame flip up-down (probability)
+fliplr: 0.5  # frame flip left-right (probability)
+cutout: 0.01 # frame cutout (probability)
+noise: 0.05 # frame add noise (noise level, frame_dinal = (1-level)*frame + level*scaled_random)
+
+# degrees: 0.0  # frame rotation (+/- deg)
+# translate: 0.1  # frame translation (+/- fraction)
+# scale: 0.9  # frame scale (+/- gain)
+# shear: 0.0  # frame shear (+/- deg)
+# perspective: 0.0  # frame perspective (+/- fraction), range 0-0.001

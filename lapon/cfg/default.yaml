@@ -1,0 +1,199 @@
+# LaPON, GPL-3.0 license
+# Default training & validating settings 
+
+# Main settings (for trainer & validator etc.) ------------------------------------------------------------------------------------------
+model: models.lapon4ns # (str) module which contains a model Class(LaPON) inside, or path to model file, i.e. lapon.pt, lapon.yaml
+depth_multiple: 0.50 # model depth multiple (Make sure to be consistent with the pretrained model, if you want to change the default values)
+width_multiple: 1.00 # model width multiple (Make sure to be consistent with the pretrained model, if you want to change the default values)
+model_weights: # pretrained model weights path, use a model with RANDOM weights when None, i.e. models/checkpoints/weights.pt
+pretrained: True # (bool | str) whether to use a pretrained model (bool) or a model to load weights from (str)
+project: runs/train  # (str, optional) project name
+name: exp # (str, optional) experiment name, results saved to 'project/name' directory
+resume: False # (bool) resume training from the specified existing checkpoint (in 'project/name')
+data_train: # (str) path to data dir or txt file, i.e. train_datadir_u_z1.txt, data/demo/isotropic1024coarse/test_datadir_u_z1.txt 
+data_val: # (str path to data dir or txt file, i.e. val_datadir_u_z1.txt
+data_test: # (str) path to data dir or txt file, i.e. test_datadir_u_z1.txt
+augment: True # use data augment
+hyp: # (str, optional) path to hyp file, i.e. hyp.jhtdb.yaml
+epochs: 5 # (int) number of epochs to train for, i.e. 100, 300, 500, 600, 1200
+time: # (float, optional) The upper limit of the training time, if it times out, the training will stop automatically
+patience: 100 # (int) epochs to wait for no observable improvement for early stopping of training
+framesz: 64 # (int | list) input frames size as int for train and val modes, or list[h,w] for predict and export modes
+save: True # (bool) save train checkpoints and predict results
+save_period: -1 # (int) Save checkpoint every x epochs (disabled if < 1, but save best & last)
+save_period_fig: 25 # (int) Save figs every x epochs (do not plot at all when tensor_board_fig < 0, tensor_board_fig = 0 means just save best & last)
+tensor_board_fig: True # (bool) whether to save figs in tensor board when tensor_board_fig >= 0
+device: cuda # (int | str | list, optional) device to run on, i.e. cuda device=0 or device=0,1,2,3 or device=cpu (Multi-GPU has not yet been implemented)
+workers: 12 # (int) number of worker threads for data loading (per RANK if DDP)
+seed: 0 # (int) random seed for reproducibility
+deterministic: True # (bool) whether to enable deterministic mode when init_seed
+rect: False # (bool) rectangular training if mode='train' or rectangular validation if mode='val'
+cos_lr: False # (bool) use cosine learning rate scheduler
+amp: True # (bool) Automatic Mixed Precision (AMP) training, choices=[True, False], True runs AMP check
+use_multi_scale: False # (bool) Whether to use multiscale during training 
+
+# Training hyp (for trainer) ----------------------------------------------------------------------------------------------------------
+optimizer: SGD # (str) optimizer to use, choices=[Adam, L-BFGS-B, SGD, Adamax, AdamW, NAdam, RAdam, RMSProp, auto]
+lr0: 1e-4 # initial learning rate (SGD=1E-2, Adam=1E-3)
+lrf: 0.01 # final OneCycleLR learning rate (lr0 * lrf)
+momentum: 0.937 # SGD momentum/Adam beta1
+weight_decay: 0.0005 # optimizer weight decay 5e-4
+warmup_epochs: 3.0 # warmup epochs (fractions ok)
+warmup_momentum: 0.8 # warmup initial momentum
+warmup_bias_lr: 0.1 # warmup initial bias lr (no higher than 0.01 for Adam) (warmup initial weights lr = 0.0) (bias lr falls from 0.1 to lr0, all other lrs rise from 0.0 to lr0)
+# loss gain
+operator_weights: [0.0183, 0.0183, 0.60] # (list) for weighted loss just in train separately (Class TrainerSep). (The corresponding loss do not backpropagate if it's weight=0)
+batch: 32 # (int) number of frames per batch (-1 for AutoBatch; it will accumulate when batch < nbs)
+nbs: 128 # (int) nominal batch size (it will accumulate when batch < nbs)
+
+# Model & data settings (for trainer & validator etc.) --------------------------------------------------------------------------------
+field_axis: xy # The plane on which the 2D physics field, choices=["xy", "xz", "yz"]
+pad_mode: newman # velocity BC(Boundary Condition), choices=["dirichlet", "newman", "periodic", "symmetry"]
+pad_value: 0.0 # velocity BC(Boundary Condition) value when pad_mode="dirichlet"
+pad_mode_p: newman # pressure BC(Boundary Condition), choices=["dirichlet", "newman", "periodic", "symmetry"]
+pad_value_p: 0.0 # pressure BC(Boundary Condition) value when pad_mode="dirichlet"
+history_num: 1 # history frame num of each sample
+stride: 32 # The maximum reduction factor of the CNN module to the input frame size, the input data size must be a multiple of this value.
+use_isotropic_conv: True # use isotropic conv
+
+# Validation settings (just for validator; cover hyp (i.e. hyp.jhtdb.yaml)) ------------------------------------------------------------
+model_weights_val: # pretrained model weights path, use a model with RANDOM weights when None
+project_val: runs/val # (str, optional) validation project name
+name_val: exp # (str, optional) experiment name, results saved to 'project/name' directory
+resume_val: False # (bool) validation on the specified existing exp dir (name_val), instead of creating a new dir
+
+data_set_val: # (#0 origin val dataset) # (str) path to data dir or txt file, i.e. test_datadir_u_z1.txt
+data_set_val1: # (#1 far_time) # just for generalization validate; (str) path to data dir or txt file
+data_set_val2: # (#2 far_space) # just for generalization validate; (str) path to data dir or txt file
+data_set_val3: # (#3 new_data) # just for generalization validate; (str) path to data dir or txt file
+data_set_val4: # (#4 new_data) # just for generalization validate; (str) path to data dir or txt file
+augment_val: False # (just preset state, auto make augment_val = True when cutout != 0 or noise != 0); use data augment (cutout, noise, affine transformation etc.) 
+history_num_val: 1 # history frame num of each sample
+
+# experiment parameters list (model & grid & dt & continuously_infer_num etc.) ===============================================
+# general parameters =======================
+save_results_to_disk: True # Save results_file to disk when calculate (infer) 
+recal_results: False # re-calculate (infer) results if results_file exists (If True, please MANUALLY REMOVE the directory: 'results_data' in 'project_val/name_val'!) 
+    # (Usage(when False): If you want to re-validate (calculate) a model, only need to delete the corresponding NC file, and the model corresponding to the other existing NC files will not be recalculated.)
+one_sample_idx: 0 # (for plot heat map) initial sample index in dataset when load just one sample (Don't be too big, as it's easy to get out of the dataset if it's too close to the end of the dataset)
+out_resize: # resize frames_out in validator.one_sample_continuously_infer & validator.eval_loop, unify the final output frame_size for models of different frame_size for easy comparison 
+    # (Especially the energy spectrum comparison) (auto set as frame_size_ls_line[-1] if out_resize==None)
+batch_val: # (dict) map: frame_size -> number of frames per batch in validate (-1 for AutoBatch)
+    "(1024, 1024)": 2 # DS (only_numerical=True)
+    "(512, 512)": 4 # DS (only_numerical=True)
+    "(256, 256)": 8 # DS (only_numerical=True)
+    "(128, 128)": 16 # DS (only_numerical=True)
+    "(64, 64)": 32 # LaPON
+    "(32, 32)": 64 # LaPON
+    "(16, 16)": 256 # LaPON
+    "(8, 8)": 512 # LaPON
+contour: True # replace heat map with contour map 
+contourf: False # replace contour map with contourf map when contour = True
+# heat map ===========
+only_numerical_ls_heat: [False, True] # (corresponding to frame_size_ls) True: Direct simulation; False: LaPON
+frame_size_ls_heat: [[64, 64], [64, 64]] # (corresponding to only_numerical_ls) every item: grid resolution (h, w)
+model_name_ls_heat: [ # (corresponding to frame_size_ls & only_numerical_ls) model name (label) when plot heat map
+    "Target",
+    "LaPON 64 $\\times$ 64", 
+    "DS 64 $\\times$ 64"]
+# line chart =========
+only_numerical_ls_line: [True, True, True, True, False] # (corresponding to frame_size_ls) True: Direct simulation; False: LaPON
+frame_size_ls_line: [[512, 512], [256, 256], [128, 128], [64, 64], [64, 64]] # (corresponding to only_numerical_ls) every item: grid resolution (h, w)
+model_name_ls_line: [ # (corresponding to frame_size_ls & only_numerical_ls) model name (legend) when plot line chart
+    "DS 512 $\\times$ 512",
+    "DS 256 $\\times$ 256",
+    "DS 128 $\\times$ 128",
+    "DS 64 $\\times$ 64", 
+    "LaPON 64 $\\times$ 64"]
+# ============================================================
+# accuracy validate ==========================================
+# heat map ===========
+dt_multiple_ls_acc_heat: [[1, 1], [8, 8], [16, 16], [21, 21]] # (must be in [0.1, 0.2, 0.5] if dt_multiple[i][j]<1 when validate) (in heat map) every item: range of dt_multiple (NOTE Two values must be equal in each element)
+dt_label_ls_acc_heat: [ # (corresponding to dt_multiple_ls_acc_heat) dt label when plot heat map
+    "$\\Delta t$ = 2$\\times10^{-3}$ s",  
+    "$\\Delta t$ = 16$\\times10^{-3}$ s",
+    "$\\Delta t$ = 32$\\times10^{-3}$ s",
+    "$\\Delta t$ = 42$\\times10^{-3}$ s"]
+# line chart =========
+dt_multiple_ls_acc_line: [[1, 1], [2, 2], [8, 8], [16, 16], [21, 21]] # (in line chart) every item: range of dt_multiple (NOTE Two values must be equal in each element)
+xvline_acc_line: # x-coordinate of vertical line when plot vorticity_correlation
+yscale_log_acc_line: False # y-axis logarithmic scaling when plot vorticity_correlation
+# energy spectrum ====
+one_sample_idx_acc_spec: 0 # sample index in dataset when load just one sample in plotting energy spectrum
+dt_multiple_acc_spec: [1, 1] # dt_multiple when plot energy spectrum (NOTE Two values must be equal)
+continuously_infer_num_acc_spec: 21 # continuously infer num in plotting energy spectrum
+xscale_log_acc_spec: True # x-axis logarithmic scaling when plot energy spectrum
+yscale_log_acc_spec: True # y-axis logarithmic scaling when plot energy spectrum
+# ============================================================
+# stability validate =========================================
+# heat map ===========
+dt_multiple_ls_stb_heat: [1, 1] # (in heat map) every item: range of dt_multiple (NOTE Two values must be equal)
+continuously_infer_num_ls_stb_heat: [10, 21, 100] # [1, 10, 21] / [10, 21, 100] for 1*dt; [100, 212, 995] for 0.1*dt; # (in heat map) every item: range of dt_multiple 
+dt_label_ls_stb_heat: [ # (corresponding to dt_multiple_ls_stb_heat) dt label when plot heat map
+    "No. of time step = 0",
+    "No. of time step = 10",
+    "No. of time step = 21",
+    "No. of time step = 100"
+    ]
+# line chart =========
+dt_multiple_ls_stb_line: [[1, 1], [2, 2], [4, 4], [8, 8]] # (NOTE (dt_multiple_ls_stb_line[-1] % dt_multiple_ls_stb_line[i]) must be 0) (in line chart) every item: range of dt_multiple (NOTE Two values must be equal in each element)
+subfig_label_stb_line: [ # (corresponding to dt_multiple_ls_stb_line) subfig label when plot line chart
+    "$\\Delta t$ = 2$\\times10^{-3}$ s",  
+    "$\\Delta t$ = 4$\\times10^{-3}$ s",
+    "$\\Delta t$ = 8$\\times10^{-3}$ s",
+    "$\\Delta t$ = 16$\\times10^{-3}$ s"]
+xvline_stb_line: 0.042 # x-coordinate of vertical line when plot vorticity_correlation
+yscale_log_stb_line: False # y-axis logarithmic scaling when plot vorticity_correlation
+alignment_value_xcoordinate_stb_line: True # When plot line chart, in order to make the x-coordinate values of multiple subgraphs consistent, the data is revalued
+# others =============
+maxdt_continuously_infer_num: 5 # continuously infer num of max dt (max dt = dt_multiple_ls_stb_line[-1])
+# noise&cutout =======
+one_sample_idx_stb_nc: 0 # sample index in dataset when load just one sample in plotting noise&cutout
+dt_multiple_stb_nc: [8, 8] # dt_multiple when plot noise&cutout (NOTE Two values must be equal)
+continuously_infer_num_stb_nc: 1 # continuously infer num in plotting noise&cutout
+noise_ls: [0.001, 0.005, 0.01, 0.05, 0.1, 0.15, 0.25]  # auto make augment_val = True when noise != 0; every item: frame add noise (noise level, frame_dinal = (1-level)*frame + level*scaled_random)
+xscale_log_stb_noise: True # x-axis logarithmic scaling when plot noise
+# ============================================================
+# generalization validate ====================================
+# heat map ===========
+dt_multiple_ls_gnr_heat: [[1, 1], [4, 4], [6, 6], [8, 8]] # (in heat map) every item: range of dt_multiple (NOTE Two values must be equal in each element)
+dt_label_ls_gnr_heat: [ # (corresponding to dt_multiple_ls_gnr_heat) dt label when plot heat map
+    "$\\Delta t$ = 7$\\times10^{-3}$ s",  
+    "$\\Delta t$ = 28$\\times10^{-3}$ s",  
+    "$\\Delta t$ = 42$\\times10^{-3}$ s",
+    "$\\Delta t$ = 56$\\times10^{-3}$ s"]
+# line chart =========
+dt_multiple_ls_gnr_line: [[1, 1], [2, 2], [4, 4], [6, 6], [8, 8]] # (in line chart) every item: range of dt_multiple (NOTE Two values must be equal in each element)
+xvline_gnr_line: # x-coordinate of vertical line when plot vorticity_correlation
+yscale_log_gnr_line: False # y-axis logarithmic scaling when plot vorticity_correlation
+# energy spectrum ====
+one_sample_idx_gnr_spec: 0 # sample index in dataset when load just one sample in plotting energy spectrum
+dt_multiple_gnr_spec: [1, 1] # dt_multiple when plot energy spectrum (NOTE Two values must be equal)
+continuously_infer_num_gnr_spec: 21 # continuously infer num in plotting energy spectrum
+xscale_log_gnr_spec: True # x-axis logarithmic scaling when plot energy spectrum
+yscale_log_gnr_spec: True # y-axis logarithmic scaling when plot energy spectrum
+# ============================================================
+# Comparison to other ML models ==============================
+data_name: [ # dataset name, corresponding to data_set_val and data_set_val_i
+    "Extra time", 
+    "Extra space", 
+    "Decaying", 
+    "More turbulent"]
+models_mc: [ # all model names for comparison
+    'YOLOv5', # YOLO YOLOv5 YOLOv5basedEPD # YOLOv5 yyds! respect!
+    'DeepONetCNN', # DeepONetCNN DeepONetbasedEPD
+    'LaPON']
+model_weights_val_yolo: # pretrained model weights path, use a model with RANDOM weights when None
+model_weights_val_deeponet: # pretrained model weights path, use a model with RANDOM weights when None
+# comparisonML_normal ====
+dt_multiple_normal: [8, 8] 
+continuously_infer_num_normal: 5 
+# comparisonML_comprehensiveness ====
+dtdx_multiple: [[1, 16], [1, 8], [4, 8]] # base dt is 2e-3 for all datasets in this work (set in src code); base dx is (2*pi/(1024-1) * (1024/64)) = 0.09827073794220272
+dtdx_multiple_label: [
+    "$\\Delta t$, 16$\\Delta x_i$",  
+    "$\\Delta t$, 8$\\Delta x_i$",  
+    "4$\\Delta t$, 8$\\Delta x_i$"]
+continuously_infer_num_comprehensiveness: 5
+# ============================================================
+
